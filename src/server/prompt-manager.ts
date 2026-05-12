@@ -1,3 +1,5 @@
+import { LangfuseClient } from "@langfuse/client";
+import { env, isLangfuseConfigured } from "./env";
 import {
   buildPromptVariables,
   compileLocalPrompt,
@@ -5,6 +7,24 @@ import {
   type PromptVariant
 } from "./local-prompt";
 import type { SupportProfile } from "../shared/types";
+
+let langfuseClient: LangfuseClient | null = null;
+
+function getLangfuseClient() {
+  if (!isLangfuseConfigured()) {
+    return null;
+  }
+
+  if (!langfuseClient) {
+    langfuseClient = new LangfuseClient({
+      publicKey: env.langfusePublicKey,
+      secretKey: env.langfuseSecretKey,
+      baseUrl: env.langfuseBaseUrl
+    });
+  }
+
+  return langfuseClient;
+}
 
 export type ResolvedPrompt = {
   promptText: string;
@@ -18,23 +38,55 @@ export type ResolvedPrompt = {
 };
 
 export async function resolveSupportPrompt(profile: SupportProfile): Promise<ResolvedPrompt> {
-  const variant: PromptVariant = "baseline";
+  const variant = (env.workshopPromptVariant as PromptVariant) || "baseline";
   const fallback = getLocalPromptTemplate(variant);
   const variables = buildPromptVariables(profile);
+  const langfuse = getLangfuseClient();
+
+  if (!langfuse || !env.langfusePromptName) {
+    return {
+      promptText: compileLocalPrompt(fallback, variables),
+      promptSource: "local",
+      variant
+    };
+  }
+
+  const prompt = await langfuse.prompt.get(env.langfusePromptName, {
+    type: "text",
+    label: env.langfusePromptLabel || undefined,
+    fallback,
+    cacheTtlSeconds: process.env.NODE_ENV === "development" ? 0 : 60
+  });
 
   return {
-    promptText: compileLocalPrompt(fallback, variables),
-    promptSource: "local",
+    promptText: prompt.compile(variables),
+    promptSource: prompt.isFallback ? "local" : "langfuse",
+    linkedPrompt: {
+      name: prompt.name,
+      version: prompt.version,
+      isFallback: prompt.isFallback
+    },
     variant
   };
 }
 
-export async function publishSupportPrompt(_variant: PromptVariant) {
-  throw new Error("Prompt publishing is introduced in the prompt-management checkpoint.");
+export async function publishSupportPrompt(variant: PromptVariant) {
+  const langfuse = getLangfuseClient();
 
-  return {
-    name: "",
-    label: "",
-    variant: "baseline" as PromptVariant
-  };
+  if (!langfuse) {
+    throw new Error("Langfuse credentials are required to publish prompts.");
+  }
+
+  const name = env.langfusePromptName || "parent-support-agent";
+  const label = env.langfusePromptLabel || "production";
+
+  await langfuse.prompt.create({
+    name,
+    type: "text",
+    prompt: getLocalPromptTemplate(variant),
+    labels: [label]
+  });
+
+  return { name, label, variant };
 }
+
