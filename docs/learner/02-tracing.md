@@ -34,7 +34,7 @@ The processor reads `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_
 
 ### `src/server/support-agent.ts`
 
-Wrap the OpenAI client:
+Wrap the OpenAI client at module scope:
 
 ```ts
 import { observeOpenAI } from "@langfuse/openai";
@@ -42,7 +42,19 @@ import { observeOpenAI } from "@langfuse/openai";
 const openai = observeOpenAI(new OpenAI({ apiKey: env.openaiApiKey }));
 ```
 
-Use `openai.chat.completions.create(...)` as before.
+**Then replace the call** in `runSupportConversation` — find:
+
+```ts
+const response = await getOpenAIClient().chat.completions.create({
+```
+
+and change it to:
+
+```ts
+const response = await openai.chat.completions.create({
+```
+
+Without this swap, the wrapped `openai` is a dead variable and no traces are emitted. The old `getOpenAIClient()` helper becomes unused and can be deleted.
 
 **Verify:** `npm run dev`, ask one question in the UI, refresh Langfuse — you should see one generation with prompt, response, tokens, and latency.
 
