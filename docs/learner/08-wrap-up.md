@@ -6,17 +6,61 @@ You have walked through the full workshop path.
 
 ## Goal
 
-Leave with a clear mental model of how the pieces connect.
+Be able to explain the full engineering loop and how each repository step supported it.
 
 ## What you should now be able to explain
 
-1. Why we started with a working app before tracing.
-2. What tracing changed technically and conceptually.
-3. Why prompt management matters once traces exist.
-4. How monitoring helps us pick better examples.
-5. Why datasets and experiments make improvement systematic.
-6. How prompt iteration fits into the Langfuse AI engineering loop.
+### Product shape
+
+You should be able to explain why the sample app is intentionally small:
+
+- one Dad support context
+- one chat interface
+- two local tools
+- one OpenAI app loop
+
+### Tracing
+
+You should be able to explain:
+
+- where tracing is initialized
+- where the root observation is created
+- where the tools are traced
+- why the root input contains `messages`
+- why the root output contains `answer`
+
+### Prompt management
+
+You should be able to explain:
+
+- where the fallback prompt lives
+- where the Langfuse prompt is fetched
+- how the app decides between `local` and `langfuse`
+
+### Monitoring
+
+You should be able to explain:
+
+- which observation to monitor
+- which JSON paths matter
+- why out-of-scope and disagreement are good first monitors
+
+### Dataset and experiments
+
+You should be able to explain:
+
+- why the dataset uses `input.messages`
+- why the experiment reuses `runSupportConversation(...)`
+- how the evaluator score is attached
+
+### Iteration
+
+You should be able to explain:
+
+- what changed between two runs
+- how you compared them
+- what you would test next
 
 ## End state
 
-You should now be able to take the same pattern into another LLM application and repeat the loop there.
+You should now be able to take the same structure into another LLM app and rebuild the same loop there with much less guesswork.

@@ -1,20 +1,29 @@
 # Learner path
 
-This folder is the participant-facing version of the workshop.
+This folder is the participant-facing build guide for the workshop.
 
-Each module is written as a build step:
+Use it like this:
 
-1. Start from the previous checkpoint.
-2. Add the missing parts yourself.
-3. Use the finished state as the input to the next step.
+1. Start from the checkpoint named at the top of the module.
+2. Make the missing changes yourself.
+3. Verify that your code behaves like the end state described in the module.
+4. Use that finished state as the input to the next module.
 
-That means:
+The important mental model for this repo is:
 
-- `01-base-app` is the first runnable app.
-- `02-tracing` starts from the untraced app and ends with the traced app.
-- `03-prompt-management` starts from the traced app.
-- `04-monitoring` starts from the traced and prompt-managed shape.
-- later steps keep following the same pattern.
+- `01-base-app` gives you the first working OpenAI app.
+- `02-tracing` starts from that untraced app and adds Langfuse instrumentation.
+- `03-prompt-management` starts from the traced app and adds Langfuse-managed prompts.
+- `04-monitoring` uses the trace shape you created in tracing.
+- `05-dataset` turns the app scope into reusable examples.
+- `06-experiments` runs the same app logic on the dataset.
+- `07-prompt-iteration` changes the prompt and compares runs.
+
+When you read a module, pay special attention to:
+
+- `Exact changes by file`
+- `What the finished file should contain`
+- `How to verify you are done`
 
 Modules:
 
