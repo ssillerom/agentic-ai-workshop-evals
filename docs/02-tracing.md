@@ -2,16 +2,15 @@
 
 ## How to think about this step
 
-This is the first real Langfuse moment. We take a working but opaque app and turn it into something we can inspect. We do it in two passes: get one trace flowing, then add the structure that makes the trace useful.
+This is the first real Langfuse moment. We take a working but opaque app and turn it into something we can inspect. The goal is not "add telemetry because telemetry is good." The goal is "make one chat turn explain itself."
 
 ## Goal
 
-By the end of this step:
+By the end of this step, one chat turn shows up in Langfuse as a nested trace that captures every part of the agent: the OpenAI generation, the tool calls, and the agent run that ties them together.
 
-- every OpenAI call in the app shows up as a trace in Langfuse
-- one chat turn is a nested trace with an agent root, the OpenAI generation, and the two tool calls
+<!-- TODO: insert the agent + tools diagram here. Same graphic that appears in the intro section so learners see the same mental model in both places. -->
 
-User/session attribution, tags, and metadata are intentionally left for `04-monitoring`.
+*[Diagram placeholder: the Dad IT Support Agent in the center, calling out to the OpenAI generation and to the two tools (`get_support_context`, `search_help_library`). Reused from the intro section.]*
 
 ## Starting point
 
@@ -21,11 +20,17 @@ git checkout checkpoint/02-tracing-start
 
 This tag is the blank slate for this step: the base app from `checkpoint/01-base-app`, with no Langfuse wiring yet. The Langfuse packages are already in `package.json` (`@langfuse/otel`, `@langfuse/openai`, `@langfuse/tracing`, `@opentelemetry/sdk-node`). Run `npm install` if you haven't. Make sure `.env` has your `OPENAI_API_KEY` and Langfuse keys.
 
-When you finish all of the steps below, the result should match `checkpoint/02-tracing`.
+We will build up the trace in three steps that map directly onto the diagram above:
 
-## Logging the first trace
+1. **First trace** — log the OpenAI generations themselves.
+2. **Nested traces** — group the generations under a single agent run per turn.
+3. **Recording tool calls** — make each tool invocation its own observation.
 
-Two changes, and every OpenAI call in the app is traced.
+User/session attribution, tags, and metadata are intentionally left for `04-monitoring`.
+
+## Step 1 — First trace
+
+As a first step we want to log the generations themselves. Without this we have no telemetry at all: the OpenAI call leaves the process, the model thinks, the answer comes back, and we have no record of any of it. Two small changes are enough to fix that.
 
 **Start the Langfuse span processor.** In `src/server/index.ts`, near the top:
 
@@ -58,17 +63,15 @@ and replace it with:
 const response = await openai.chat.completions.create({
 ```
 
-Without this swap, the wrapped `openai` is a dead variable and no traces will be emitted. The old `getOpenAIClient()` helper becomes unused — leave it or delete it, your call.
+Without this swap, the wrapped `openai` is a dead variable and no traces are emitted. The old `getOpenAIClient()` helper becomes unused and can be deleted.
 
-That is the whole minimum. Run `npm run dev`, ask one question in the UI, open Langfuse, and you should see one generation with the prompt, the response, the model, tokens, and latency.
+Run `npm run dev`, ask one question in the UI, open Langfuse, and you should see one generation per OpenAI call with the prompt, response, model, tokens, and latency. That's already a real telemetry surface — but every generation shows up as its own top-level trace, and we have no view of "one chat turn" yet.
 
-## Richer trace structure
+## Step 2 — Nested traces
 
-The first-trace version shows each OpenAI call as its own top-level generation. Tool calls live inside the generation’s `tool_calls` field, and there is no “one turn” parent grouping everything. We fix both with `observe(...)`.
+To set those generations into context we now want to group and nest them together. A single chat turn often involves more than one OpenAI call (the model decides to use a tool, we run the tool, we call OpenAI again with the tool result, and so on). Without grouping, those calls fly past in Langfuse as separate, disconnected traces. With grouping, one chat turn is one trace, and the OpenAI calls live underneath as children.
 
-The key insight: `observe(fn, opts)` accepts any async function reference and returns a wrapped version with the same signature. That means we don't have to relocate the existing function body — we just rename it, then export a wrapped version.
-
-### Wrap the agent function — three surgical edits
+We do that by wrapping `runSupportConversation` with `observe(...)`. The key insight: `observe(fn, opts)` accepts any async function reference and returns a wrapped version with the same signature. That means three surgical edits — we do not touch the function body.
 
 **1. Add the import** to `src/server/support-agent.ts`:
 
@@ -76,7 +79,7 @@ The key insight: `observe(fn, opts)` accepts any async function reference and re
 import { observe } from "@langfuse/tracing";
 ```
 
-**2. Demote the existing function.** Find this line:
+**2. Demote the existing function.** Find:
 
 ```ts
 export async function runSupportConversation(request: ChatRequest): Promise<ChatResponse> {
@@ -88,7 +91,7 @@ Drop the `export` and rename it:
 async function runSupportConversationInner(request: ChatRequest): Promise<ChatResponse> {
 ```
 
-The function body stays exactly as it is. You do not touch it.
+The body stays exactly as it is.
 
 **3. Add the wrapped export at the bottom of the file:**
 
@@ -99,11 +102,15 @@ export const runSupportConversation = observe(runSupportConversationInner, {
 });
 ```
 
-`index.ts` still imports `runSupportConversation` the same way — it just happens to be a `const` now. `observe(...)` auto-captures the argument as the trace input and the return value as the trace output.
+`index.ts` still imports `runSupportConversation` the same way — it just happens to be a `const` now. `observe(...)` auto-captures the function argument as the trace input and the return value as the trace output.
 
-### Wrap each tool
+Refresh Langfuse and you should now see one root `dad-it-support-chat-turn` observation per turn, with the OpenAI generation nested underneath it.
 
-In `src/server/tools.ts`, the inline switch bodies in `executeTool` can't be observed in place — each tool has to be its own function so `observe` has something to wrap. Add the import and the two observed helpers above `executeTool`, then redirect the switch at them.
+## Step 3 — Recording tool calls
+
+Our agent is using tools — that's how we designed it initially. While we can already see the tool calls in the generation output (they appear in the `tool_calls` field of the OpenAI response), we are not yet logging the tool inputs and outputs as their own observations. The actual tool execution is invisible: if a tool returns the wrong data, we'd see a confused final answer in the trace and have no way to point at the line where it went wrong.
+
+We see a pattern now: we import `observe` from `@langfuse/tracing` and wrap the functions we want to log. The inline switch bodies in `executeTool` can't be observed in place — each tool needs to be its own function so `observe` has something to wrap. Add the import and the two observed helpers above `executeTool`, then redirect the switch at them.
 
 ```ts
 import { observe } from "@langfuse/tracing";
@@ -162,24 +169,26 @@ export async function executeTool(name: string, input: Record<string, unknown>):
 
 `TOOL_DEFINITIONS` at the top of the file stays untouched.
 
-## Where the bootstrap lives in this repo
-
-For production use it's nicer to skip tracing cleanly when Langfuse keys are missing and to flush on shutdown. In this repo that's factored into `src/server/instrumentation.ts`, which exposes `ensureTracingInitialized()` and `shutdownTracing()`. The body is the same `LangfuseSpanProcessor` + `NodeSDK.start()` you saw above. `src/server/index.ts` calls those helpers instead of inlining.
-
-You don't have to write `instrumentation.ts` to follow this step — the inline snippet works. Reading it once is enough.
-
 ## Run and verify
 
 ```bash
 npm run dev
 ```
 
-Ask one question that triggers both tools — for example, *“How do I reconnect my iPhone to Wi-Fi?”* — then open Langfuse and check:
+Ask one question that triggers both tools — for example, *"How do I reconnect my iPhone to Wi-Fi?"* — then open Langfuse and check:
 
-1. One root `dad-it-support-chat-turn` observation per turn.
-2. One nested OpenAI generation showing prompt, response, tokens, latency.
+1. One root `dad-it-support-chat-turn` observation per turn (type `agent`).
+2. One nested OpenAI generation per model call, with prompt, response, tokens, latency.
 3. Two nested tool observations (`get_support_context`, `search_help_library`) with their inputs and outputs.
+
+## Where the bootstrap lives in this repo
+
+For production use it's nicer to skip tracing cleanly when Langfuse keys are missing and to flush on shutdown. In this repo that's factored into `src/server/instrumentation.ts`, which exposes `ensureTracingInitialized()` and `shutdownTracing()`. The body is the same `LangfuseSpanProcessor` + `NodeSDK.start()` you saw above. `src/server/index.ts` calls those helpers instead of inlining.
+
+You don't have to write `instrumentation.ts` to follow this step — the inline snippet works. Reading it once is enough.
 
 ## Teaching point
 
-Two lines (`LangfuseSpanProcessor.start()` + `observeOpenAI(...)`) are enough to see *that* the model was called. `observe(...)` on the agent and tools is what turns that flat generation log into a structured trace you can actually debug — and is what monitoring, datasets, and experiments hang off in the later steps.
+Same pattern, different observation types, same concept. `observe(fn, { asType: "agent" })` for the chat turn, `observe(fn, { asType: "tool" })` for each tool, and `observeOpenAI(client)` is essentially a specialized version of the same wrap-and-emit pattern, packaged for the OpenAI SDK. Once you internalize *"wrap the thing you want to see, give it a name, give it a type,"* you can structure any application this way.
+
+A more straightforward way to add rich tracing in line with Langfuse best practices is to use the **Langfuse Claude Code skill** (`/langfuse`). The skill knows the recommended observation types, naming conventions, and SDK integration patterns, and applies them to your codebase without you hand-rolling each wrap. The hand-rolled walkthrough in this step is here so you understand what the skill is doing under the hood — once you've seen it once, leaning on the skill for the next project is the fast path.
