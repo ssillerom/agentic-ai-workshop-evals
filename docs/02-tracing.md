@@ -16,10 +16,12 @@ User/session attribution, tags, and metadata are intentionally left for `04-moni
 ## Starting point
 
 ```bash
-git checkout checkpoint/01-base-app
+git checkout checkpoint/02-tracing-start
 ```
 
-The Langfuse packages are already in `package.json` (`@langfuse/otel`, `@langfuse/openai`, `@langfuse/tracing`, `@opentelemetry/sdk-node`). Run `npm install` if you haven't. Make sure `.env` has your `OPENAI_API_KEY` and Langfuse keys.
+This tag is the blank slate for this step: the base app from `checkpoint/01-base-app`, with no Langfuse wiring yet. The Langfuse packages are already in `package.json` (`@langfuse/otel`, `@langfuse/openai`, `@langfuse/tracing`, `@opentelemetry/sdk-node`). Run `npm install` if you haven't. Make sure `.env` has your `OPENAI_API_KEY` and Langfuse keys.
+
+When you finish all of the steps below, the result should match `checkpoint/02-tracing`.
 
 ## Logging the first trace
 
