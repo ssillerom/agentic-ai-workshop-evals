@@ -43,21 +43,29 @@ You have an agent that is traced, monitored, runs against a hosted dataset, and 
 
 ## Step 1 — Change the prompt
 
-Two options:
+The change should be informed by what you saw in run 1 — for example, items where `correctness` was low because the agent danced around an out-of-scope question instead of refusing it cleanly. A concrete edit:
+
+> Add a rule: *"If a request is outside iPhone help (taxes, travel booking, anything that needs live account access), say so directly in one short sentence — what you can't help with and what you can — then stop. Do not attempt to answer the request."*
+
+That makes the out-of-scope behaviour explicit instead of letting the model improvise.
+
+Two ways to make the change:
 
 **Option A — Langfuse-side (edit in the UI, recommended):**
 
-Prompts → `dad-it-support-agent` → edit body → save as a new version → promote the new version to the `production` label. The resolver fetches by label, so the next request picks up the new version automatically. This is the workflow your team will use for ongoing iteration in production.
+Prompts → `dad-it-support-agent` → edit body → add the rule above into the **Rules** section → save as a new version → promote the new version to the `production` label. The resolver fetches by label, so the next request picks up the new version automatically.
 
-**Option B — Code-side (republish a different variant):**
+**Option B — Code-side (edit `src/server/local-prompt.ts` and republish):**
+
+Open `src/server/local-prompt.ts`, add the rule to the `baseline` template, then:
 
 ```bash
-WORKSHOP_PROMPT_VARIANT=gentler npm run prompt:publish
+npm run prompt:publish
 ```
 
-This publishes the `gentler` variant under the same name and label, creating a new version in Langfuse.
+The repo also ships a `gentler` variant you can switch to as-is (`WORKSHOP_PROMPT_VARIANT=gentler npm run prompt:publish`) — useful if you just want to see *any* prompt change rather than design your own.
 
-Either way you end up with a new prompt version that the resolver picks up on the next request because the resolver fetches by label.
+Either way you end up with a new prompt version, and the next `runSupportConversation(...)` call uses it.
 
 ## Step 2 — Rerun the dataset
 

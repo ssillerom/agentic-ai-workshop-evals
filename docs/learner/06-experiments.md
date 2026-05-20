@@ -16,12 +16,12 @@ A trace tells you about *one* turn. An experiment tells you about behavior *acro
 2. **Runs the item's input through the agent** — same `runSupportConversation(...)` the web app uses, so the trace shape is the same as production.
 3. **Scores the actual output against the expected output** with one or more evaluators.
 
-Different evaluators answer different questions:
+Different evaluators answer different questions. For a broader tour of evaluator types and when to pick which, see the [Langfuse Academy lesson on evaluate](https://langfuse.com/academy/evaluate). For this workshop we use two that give a quick first read on answer quality:
 
 - **Keyword match** (deterministic) — *did the answer cover the steps we expected?* Fast, cheap, no model call.
 - **Correctness** (LLM-as-a-judge) — *is the answer actually correct?* More expressive, especially when the wording can vary but the underlying answer has to match the ideal.
 
-In this chapter you'll run both. The keyword match is already wired into the script; you set up the LLM-as-a-judge correctness evaluator in the Langfuse UI.
+In this chapter you'll run both. The keyword match is already wired into the script. Evaluations like the keyword match can be run outside of Langfuse and written back as scores via API. The LLM-as-a-judge correctness evaluator you set yourself in the Langfuse UI.
 
 ## Goal
 
@@ -31,11 +31,9 @@ By the end of this chapter:
 2. Every item gets a **`keyword_overlap`** score (deterministic) and a **`correctness`** score (LLM-as-a-judge).
 3. The two scores plus the per-item traces are visible in Langfuse and ready to compare against future runs.
 
-![How Specs handles a ticket — one agent, two tools, one model, each hop an observation in the trace.](../images/specs_illustration.png)
-
 ## Step 1 — Understand the run script
 
-Open `scripts/run-dataset.ts`. Key points:
+Open `scripts/run-dataset.ts`. The file is annotated with numbered comments (`// --- 1. Boot the OpenTelemetry SDK ...`, `// --- 3. The deterministic evaluator ...`, etc.) so you can read it section by section. At a high level:
 
 - Loads the hosted dataset from Langfuse by `DATASET_NAME`.
 - For each item, calls the same `runSupportConversation(...)` the web app uses.
