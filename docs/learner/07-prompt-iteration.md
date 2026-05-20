@@ -58,6 +58,8 @@ Two ways to make the change:
 
 Prompts → `dad-it-support-agent` → edit body → add the rule above into the **Rules** section → save as a new version → promote the new version to the `production` label. The resolver fetches by label, so the next request picks up the new version automatically. This is the workflow your team will use for ongoing iteration in production.
 
+![Review Prompt Changes in Langfuse — side-by-side diff between v1 and the draft with the new out-of-scope rule highlighted, ready to save as a new version and promote to production.](../images/evaluate-a-change/07-evaluate-a-change-prompt-diff.png)
+
 **Option B — Code-side (edit `src/server/local-prompt.ts` and republish):**
 
 Open `src/server/local-prompt.ts`, add the same rule into the `baseline` template's Rules block, then publish:
