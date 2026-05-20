@@ -8,12 +8,28 @@ git checkout checkpoint/05-dataset
 
 Your dataset is seeded in Langfuse. `scripts/run-dataset.ts` is already in the repo.
 
+## Why experiments
+
+A trace tells you about *one* turn. An experiment tells you about behavior *across the dataset*. Every experiment run does the same three things:
+
+1. **Pulls each item from the dataset.**
+2. **Runs the item's input through the agent** — same `runSupportConversation(...)` the web app uses, so the trace shape is the same as production.
+3. **Scores the actual output against the expected output** with one or more evaluators.
+
+Different evaluators answer different questions:
+
+- **Keyword match** (deterministic) — *did the answer cover the steps we expected?* Fast, cheap, no model call.
+- **Correctness** (LLM-as-a-judge) — *is the answer actually correct?* More expressive, especially when the wording can vary but the underlying answer has to match the ideal.
+
+In this chapter you'll run both. The keyword match is already wired into the script; you set up the LLM-as-a-judge correctness evaluator in the Langfuse UI.
+
 ## Goal
 
-Two passes:
+By the end of this chapter:
 
-1. **Understand the run script** — same `runSupportConversation(...)` the web app calls, but driven by dataset items.
-2. **Run the dataset** and inspect the resulting run + scores in Langfuse.
+1. You can run the full dataset against the agent on demand.
+2. Every item gets a **`keyword_overlap`** score (deterministic) and a **`correctness`** score (LLM-as-a-judge).
+3. The two scores plus the per-item traces are visible in Langfuse and ready to compare against future runs.
 
 ![How Specs handles a ticket — one agent, two tools, one model, each hop an observation in the trace.](../images/specs_illustration.png)
 
@@ -24,11 +40,28 @@ Open `scripts/run-dataset.ts`. Key points:
 - Loads the hosted dataset from Langfuse by `DATASET_NAME`.
 - For each item, calls the same `runSupportConversation(...)` the web app uses.
 - Uses `dataset.runExperiment(...)` to roll all per-item traces into a single run row.
-- Attaches a `keyword_overlap` score per item from `expectedKeywords` vs the answer.
+- Attaches a `keyword_overlap` score per item by comparing `expectedKeywords` against the agent's answer.
 
-The traces produced are the same shape as production traces — same `dad-it-support-chat-turn` root, same OpenAI generation, same tool spans.
+The traces produced are the same shape as production traces — same `dad-it-support-chat-turn` root, same OpenAI generation, same tool spans. We don't touch the script in this chapter.
 
-## Step 2 — Run the dataset
+## Step 2 — Set up the correctness evaluator in Langfuse
+
+Langfuse ships a **Correctness** LLM-as-a-judge template that compares an actual answer to an ideal answer and returns a score. We wire it up against the experiment runs so every item gets both a deterministic keyword score and a model-judged correctness score.
+
+1. In Langfuse, open **Evaluators → New evaluator** and pick the **Correctness** template.
+2. **Target** the runs from this dataset:
+   - Scope: **Dataset runs**
+   - Dataset: `dad-it-support-workshop`
+3. **Map the template variables** to the trace's input/output and the dataset item's expected output:
+   - `question` (the user's query) ← `$.input.messages[-1].content` *or* `$.input.messages` (the template can usually accept either)
+   - `actual_output` (what the agent answered) ← `$.output` (the experiment run records the agent's answer here)
+   - `expected_output` (the ideal answer) ← `$.expectedOutput.idealAnswer` from the dataset item
+4. Pick the model you want the judge to use (e.g. `gpt-4.1-mini`) and save.
+5. Enable the evaluator.
+
+> If the template's exact variable names differ from `question` / `actual_output` / `expected_output`, only the names on the template side change — the JSONPaths above stay the same.
+
+## Step 3 — Run the dataset
 
 ```bash
 npm run dataset:run
@@ -36,21 +69,25 @@ npm run dataset:run
 
 Watch progress per item in the console; finishes with a summary line.
 
+The script attaches `keyword_overlap` itself. The Correctness evaluator you set up in Step 2 runs asynchronously in Langfuse over the new run rows shortly after.
+
 ## What to inspect in Langfuse
 
-- The new **Run** under your dataset → one row per item with `keyword_overlap` and a trace link.
-- Item-level traces — identical shape to production traces.
-- The dataset's chart view → per-run averages for future side-by-side comparisons.
+- The new **Run** under your dataset → one row per item with **two** scores: `keyword_overlap` and `correctness`, plus a trace link.
+- **Item-level traces** — identical shape to production traces.
+- The dataset's **chart view** → per-run averages for both scores, ready for side-by-side comparison after future changes.
 
 ## How to verify you are done
 
 - One run row appears under the dataset.
-- Every item has a trace and a score.
+- Every item has a trace and both scores attached.
 - Trace shape matches a normal production trace.
 
 ## Wrap-up
 
-The `/langfuse` Claude Code skill knows recommended evaluator shapes (deterministic vs LLM-as-a-judge) and how to wire them into `runExperiment` — the walkthrough exists so you see what the skill is doing under the hood.
+The two scoring approaches give you two angles on the same run: **keyword match** for "did we cover the right steps?" and **correctness** for "is the answer actually right?" Real evaluation programs typically combine deterministic and judge-based checks like this.
+
+The [**Langfuse Claude Code skill**](https://langfuse.com/docs) (`/langfuse`) knows the recommended evaluator shapes and how to wire them into `runExperiment` — this walkthrough exists so you see what the skill is doing under the hood. Learn more about experiments in the [Langfuse Academy lesson](https://langfuse.com/academy/experiments).
 
 ## End state
 

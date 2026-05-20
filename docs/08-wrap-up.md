@@ -11,7 +11,7 @@ The wrap-up is where the workshop shifts from *"we built a demo"* to *"we learne
 - How to detect interesting production behavior (out-of-scope requests, user disagreement) automatically.
 - How to turn product scope into a starter dataset of realistic examples.
 - How to run experiments on the same agent code with no parallel implementation.
-- How to compare runs after a prompt change and decide what's better — by score and by reading individual outputs.
+- How to compare runs after a change — by score and by reading individual outputs.
 
 ![How Specs handles a ticket — one agent, two tools, one model, each hop an observation in the trace.](./images/specs_illustration.png)
 
@@ -32,12 +32,32 @@ The point of Langfuse in this workshop is not just observability. It's giving te
 - What change would you test after the first prompt iteration?
 - Where in your real app would the `/langfuse` skill have saved you the most hand-rolling?
 
-## Next steps
+## How to work on your own application
 
-If you want to take this further on your own codebase, the recommended path:
+When participants go back to their own codebase, the recommended path is:
 
-1. Install the **Langfuse Claude Code skill** (`/langfuse`) — it packages the recommended patterns from steps 02 through 06 into ready-to-apply guidance.
-2. Pick the smallest LLM-using surface you have and wire `observe(...)` + `observeOpenAI(...)` first.
-3. Add `propagateAttributes(...)` only once you have at least two users or two sessions worth of data.
-4. Build your first dataset *from real traces*, not from imagination — monitoring is the right source.
-5. Run one experiment, change one thing, rerun. Repeat.
+1. **Install the Langfuse CLI** so prompts, datasets, and runs can be managed from the terminal:
+
+   ```bash
+   npm install -g @langfuse/cli
+   langfuse auth
+   ```
+
+2. **Install the Langfuse Claude Code skill** (`/langfuse`) — it packages the recommended tracing, prompt management, monitoring, and evaluator patterns from this workshop.
+
+3. **Pick the smallest LLM-using surface** they have and wire `observe(...)` + `observeOpenAI(...)` first.
+
+4. **Add user/session information** only once there are at least two users or two sessions of traffic.
+
+5. **Build the first dataset *from real traces***, not from imagination.
+
+6. **Run one experiment, change one thing, rerun.** Then repeat.
+
+For the bigger-picture material, the [Langfuse Academy](https://langfuse.com/academy) has dedicated lessons:
+
+- [The AI Engineering Loop](https://langfuse.com/academy/ai-engineering-loop)
+- [Tracing](https://langfuse.com/academy/tracing)
+- [Monitoring](https://langfuse.com/academy/monitoring)
+- [Datasets](https://langfuse.com/academy/datasets)
+- [Experiments](https://langfuse.com/academy/experiments)
+- [Evaluate](https://langfuse.com/academy/evaluate)

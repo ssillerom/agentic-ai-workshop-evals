@@ -15,7 +15,7 @@ You have walked through every loop step.
 - Detect interesting production behavior (out-of-scope, disagreement) automatically.
 - Turn product scope into a starter dataset of realistic examples.
 - Run experiments on the same agent code with no parallel implementation.
-- Compare runs after a prompt change and decide what's better — by score and by reading individual outputs.
+- Compare runs after changes and decide which setup is better — by score and by reading individual outputs.
 
 ![How Specs handles a ticket — one agent, two tools, one model, each hop an observation in the trace.](../images/specs_illustration.png)
 
@@ -36,10 +36,32 @@ Langfuse in this workshop is a *shared surface*, not just observability:
 - What change would you test after the first prompt iteration?
 - Where in your real app would the `/langfuse` skill have saved you the most hand-rolling?
 
-## Next steps
+## How to work on your own application
 
-1. Install the **Langfuse Claude Code skill** (`/langfuse`) — it packages the recommended patterns from this workshop.
-2. Pick the smallest LLM-using surface you have and wire `observe(...)` + `observeOpenAI(...)` first.
-3. Add `propagateAttributes(...)` only once you have at least two users or two sessions worth of data.
-4. Build your first dataset *from real traces*, not from imagination.
-5. Run one experiment, change one thing, rerun. Repeat.
+When you go back to your own codebase, do this in order:
+
+1. **Install the Langfuse CLI** so you can manage prompts, datasets, and runs from the terminal:
+
+   ```bash
+   npm install -g @langfuse/cli
+   langfuse auth
+   ```
+
+2. **Install the Langfuse Claude Code skill** (`/langfuse`) — it packages the recommended tracing, prompt management, monitoring, and evaluator patterns from this workshop and applies them to your codebase without you hand-rolling each piece.
+
+3. **Pick the smallest LLM-using surface** you have and wire `observe(...)` + `observeOpenAI(...)` first. Get one trace before you do anything else.
+
+4. **Add user/session information** only once you have at least two users or two sessions of traffic — there's no point until then.
+
+5. **Build your first dataset *from real traces*** rather than from imagination. Production behavior tells you what your dataset needs to cover.
+
+6. **Run one experiment, change one thing, rerun.** Then repeat.
+
+For the bigger-picture material on each step, the [Langfuse Academy](https://langfuse.com/academy) has dedicated lessons:
+
+- [The AI Engineering Loop](https://langfuse.com/academy/ai-engineering-loop)
+- [Tracing](https://langfuse.com/academy/tracing)
+- [Monitoring](https://langfuse.com/academy/monitoring)
+- [Datasets](https://langfuse.com/academy/datasets)
+- [Experiments](https://langfuse.com/academy/experiments)
+- [Evaluate](https://langfuse.com/academy/evaluate)

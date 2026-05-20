@@ -1,14 +1,23 @@
 # 06 Experiments
 
-## How to think about this step
+## Why experiments
 
-Now we stop looking at single traces and start looking at *repeated* behavior on the same task set. This is where the AI engineering loop starts to feel systematic — same agent code, same dataset, run it again, compare.
+A trace tells you about *one* turn. An experiment tells you about behavior *across the dataset*. Every experiment run does the same three things:
 
-The dataset we seeded in step 05 becomes the input. The same `runSupportConversation(...)` the web chat calls is what gets run. The output is one trace per item, scored by an evaluator, all rolled up into one run row.
+1. **Pulls each item from the dataset.**
+2. **Runs the item's input through the agent** — same `runSupportConversation(...)` the web app uses, so the trace shape is the same as production.
+3. **Scores the actual output against the expected output** with one or more evaluators.
+
+Different evaluators answer different questions:
+
+- **Keyword match** (deterministic) — *did the answer cover the steps we expected?* Fast, cheap, no model call.
+- **Correctness** (LLM-as-a-judge) — *is the answer actually correct?* More expressive, especially when wording can vary but the underlying answer has to match the ideal.
+
+In this chapter we run both. Keyword match is already wired into the script; the LLM-as-a-judge correctness evaluator is set up in the Langfuse UI.
 
 ## Goal
 
-By the end of this step you can run the full dataset against the agent on demand, attach a simple `keyword_overlap` score to every item, and look at the run summary in Langfuse — including item-level traces.
+By the end of this step you can run the full dataset against the agent on demand. Every item gets both a **`keyword_overlap`** score (deterministic, attached by the script) and a **`correctness`** score (LLM-as-a-judge, attached by Langfuse). The two scores plus the per-item traces are visible in Langfuse and ready to compare against future runs.
 
 ![How Specs handles a ticket — one agent, two tools, one model, each hop an observation in the trace.](./images/specs_illustration.png)
 
@@ -18,7 +27,7 @@ By the end of this step you can run the full dataset against the agent on demand
 git checkout checkpoint/05-dataset
 ```
 
-Your dataset is seeded in Langfuse. The script that actually runs the agent against it (`scripts/run-dataset.ts`) is already in the repo. You don't write it — you read it and run it.
+Your dataset is seeded in Langfuse. `scripts/run-dataset.ts` is already in the repo — we don't touch the script in this chapter.
 
 ## Step 1 — Understand the run script
 
@@ -27,26 +36,43 @@ Open `scripts/run-dataset.ts`. The structure:
 1. Load the hosted dataset from Langfuse by `DATASET_NAME`.
 2. For each item, call the same `runSupportConversation(...)` the web app calls — no separate "experiment app."
 3. Use `dataset.runExperiment(...)` to roll all the per-item traces into one run row.
-4. After each item, compute a simple `keyword_overlap` score from `expectedKeywords` and the model's answer, and attach it to the trace.
+4. Compute a simple `keyword_overlap` score from `expectedKeywords` and the model's answer, and attach it to the trace.
 
 The crucial point: we are not running a *different* implementation. The traces produced here are the same shape as production traces — same `dad-it-support-chat-turn` root, same OpenAI generation, same tool spans. That's what makes monitoring + experiments cumulative rather than parallel.
 
-## Step 2 — Run the dataset
+## Step 2 — Set up the correctness evaluator in Langfuse
+
+Langfuse ships a **Correctness** LLM-as-a-judge template that compares an actual answer to an ideal answer and returns a score. We wire it up against the experiment runs so every item gets both a deterministic keyword score and a model-judged correctness score.
+
+1. In Langfuse, open **Evaluators → New evaluator** and pick the **Correctness** template.
+2. Target the dataset's runs:
+   - Scope: **Dataset runs**
+   - Dataset: `dad-it-support-workshop`
+3. Map the template's variables to the trace input/output and the dataset item's expected output:
+   - `question` (the user's query) ← `$.input.messages[-1].content` *or* `$.input.messages`
+   - `actual_output` (what the agent answered) ← `$.output`
+   - `expected_output` (the ideal answer) ← `$.expectedOutput.idealAnswer`
+4. Pick the judge model (e.g. `gpt-4.1-mini`) and save.
+5. Enable the evaluator.
+
+If the template's exact variable names differ from `question` / `actual_output` / `expected_output`, only the names on the template side change — the JSONPaths above stay the same.
+
+## Step 3 — Run the dataset
 
 ```bash
 npm run dataset:run
 ```
 
-The script reports progress per item and finishes with a summary line. Each item produces one trace plus one score.
+The script reports progress per item and finishes with a summary line. Each item produces one trace plus the `keyword_overlap` score. The Correctness evaluator you set up in Step 2 then runs asynchronously over the new run rows shortly after.
 
 ## What to inspect in Langfuse
 
-- The new **Run** under your dataset — one row per item, including `keyword_overlap` and a link to the trace.
+- The new **Run** under your dataset — one row per item with **two** scores (`keyword_overlap` and `correctness`) and a trace link.
 - Item-level traces — identical shape to the production traces from earlier steps.
-- The dataset's chart view — per-run averages so you can compare future runs side by side.
+- The dataset's chart view — per-run averages for both scores, ready for side-by-side comparison after future changes.
 
 ## Teaching point
 
-Experiments are not a separate app. They are the same application logic run repeatedly on a scoped dataset so behavior can be compared over time. The cost of running them is low precisely because no separate code path exists — every improvement you make to the live app shows up in the next experiment automatically.
+Experiments are not a separate app. They are the same application logic run repeatedly on a scoped dataset so behavior can be compared over time. The two scoring approaches give two angles on the same run: **keyword match** for "did we cover the right steps?" and **correctness** for "is the answer actually right?" Real evaluation programs typically combine deterministic and judge-based checks like this.
 
-A more straightforward way to design experiments and evaluators in line with Langfuse best practices is to use the **Langfuse skill** (`/langfuse`). It knows the recommended evaluator shapes (deterministic checks vs LLM-as-a-judge), how to wire them into `runExperiment`, and how to chart results. The walkthrough exists so you understand what the skill is doing under the hood.
+The [**Langfuse Claude Code skill**](https://langfuse.com/docs) (`/langfuse`) knows the recommended evaluator shapes and how to wire them into `runExperiment` — this walkthrough exists so you understand what the skill is doing under the hood. Learn more in the [Langfuse Academy lesson on experiments](https://langfuse.com/academy/experiments).
