@@ -29,19 +29,26 @@ You don't need to change any code in this step. The trace shape from `02-tracing
 
 ## Step 1 — Wire the first two monitors (Langfuse UI)
 
-Langfuse ships templates for **User Disagreement** and **Out-of-Scope Detection**. Both are LLM-as-a-judge evaluators that read variables from the trace.
+Langfuse ships published templates for **User Disagreement** and **Out-of-Scope Detection**. Both are LLM-as-a-judge evaluators that read variables from the trace. They expect access to the system prompt and the user's latest message, so the right place to target is the OpenAI generation observation — that's where the system prompt sits at `messages[0]`.
 
-1. In Langfuse, open **Evaluators → New evaluator** and pick the **Out-of-Scope Detection** template.
-2. Target the agent's root observation:
-   - Observation type: `agent`
-   - Observation name: `dad-it-support-chat-turn`
-3. Map the template's variables from our root observation's input/output:
-   - `messages` (or `conversation`) ← `$.messages` — the full chat history including the current user message
-   - `assistant_output` (or `response`) ← `$.answer` — the agent's final reply
-4. Save and enable.
-5. Repeat the same setup with the **User Disagreement** template.
+1. In Langfuse, open **Evaluators → New evaluator** and pick the **Out-of-Scope Detection** template from the published library.
+2. Target the OpenAI generation:
+   - Observation type: `generation`
+   - Observation name: `openai-chat-completion`
+3. Map the template's variables from the generation's **Input**:
 
-If the template uses variable names different from the ones above, the JSONPath sources stay the same — only the variable name on the template side changes. The system prompt is *not* on the root observation; it lives on the child `openai-chat-completion` generation. Map from there if a judge needs the system prompt as context.
+   | Template variable | Object field | JsonPath |
+   | --- | --- | --- |
+   | `{{system_prompt}}` | `Input` | `$.messages[0].content` |
+   | `{{last_user_message}}` | `Input` | `$.messages[2].content` |
+
+   The index `[2]` works because our chat starts with Specs' opening greeting at `[1]`, so the user's latest message lands at `[2]`. If your conversation has a different opening shape, adjust the index.
+4. Pick the judge model (e.g. `gpt-4.1-mini`) and save.
+5. Enable the evaluator.
+6. Repeat the same setup for the **User Disagreement** template — same JsonPaths.
+
+> 💡 *Custom evaluators.* The shipped templates are a fast on-ramp, but you don't have to use them. **Evaluators → New evaluator → Custom** lets you write your own prompt and define your own variables. Same mapping flow — point each variable at the right JsonPath on the right observation, and you're done.
+
 
 ## Verify
 
