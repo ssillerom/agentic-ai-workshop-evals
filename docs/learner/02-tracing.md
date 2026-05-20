@@ -65,6 +65,10 @@ The old `getOpenAIClient()` helper becomes unused and can be deleted.
 
 **Verify:** `npm run dev`, ask one question, refresh Langfuse — you should see one generation per OpenAI call with prompt, response, tokens, and latency. Each generation is still its own top-level trace; we fix that next.
 
+<!-- TODO: screenshot of the Langfuse traces list after Step 1 — multiple top-level OpenAI generation traces, no agent grouping yet. -->
+
+> 📷 *Screenshot placeholder: each chat turn appears as one or more standalone `openai-chat-completion` generations in the Traces view.*
+
 ## Step 2 — Nested traces
 
 To put the generations into context we group them under one agent run per turn. Three surgical edits in `src/server/support-agent.ts` — no function body changes.
@@ -101,6 +105,10 @@ export const runSupportConversation = observe(runSupportConversationInner, {
 `index.ts` still imports `runSupportConversation` the same way. `observe(...)` auto-captures the function argument as the trace input and the return value as the trace output.
 
 **Verify:** one chat turn should now show up as a single `dad-it-support-chat-turn` observation with the OpenAI generation nested underneath.
+
+<!-- TODO: screenshot of the Langfuse trace tree after Step 2 — one `dad-it-support-chat-turn` agent root with the OpenAI generation nested underneath. -->
+
+> 📷 *Screenshot placeholder: one `dad-it-support-chat-turn` (type `agent`) per turn with the OpenAI generation as a child.*
 
 ## Step 3 — Recording tool calls
 
@@ -164,6 +172,10 @@ export async function executeTool(name: string, input: Record<string, unknown>):
   }
 }
 ```
+
+<!-- TODO: screenshot of the full Langfuse trace after Step 3 — agent root, OpenAI generation, and the two tool observations all nested. -->
+
+> 📷 *Screenshot placeholder: the full trace — `dad-it-support-chat-turn` (agent) with the OpenAI generation **and** `get_support_context` + `search_help_library` tool observations as siblings underneath.*
 
 ## Where the bootstrap lives in this repo
 

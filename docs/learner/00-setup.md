@@ -1,53 +1,59 @@
 # 00 Setup
 
-## Starting point
-
-An untouched workshop repo.
-
 ## Goal
 
-Get the repo to a state where you can run the app locally and later connect it to OpenAI and Langfuse Cloud EU.
+Have the workshop app running locally with both OpenAI and Langfuse credentials in place. From here you go straight to `02-tracing`.
 
-## Exact changes by file
+## Step 1 — Get the API keys
 
-### `.env`
+1. **OpenAI** — [platform.openai.com](https://platform.openai.com) → API Keys → create one. Copy the `sk-...` value.
+2. **Langfuse** — sign up at [langfuse.com](https://langfuse.com) on the **EU region**, create a project, and copy the public + secret keys from **Settings → API Keys**.
 
-1. Copy `.env.example` to `.env`.
-2. Fill in:
-   - `OPENAI_API_KEY`
-   - `OPENAI_MODEL`
-   - `LANGFUSE_PUBLIC_KEY`
-   - `LANGFUSE_SECRET_KEY`
-   - `LANGFUSE_BASE_URL`
-3. Leave `LANGFUSE_BASE_URL` set to `https://cloud.langfuse.com`.
-4. Keep the prompt and dataset defaults unless the workshop tells you otherwise:
-   - `LANGFUSE_PROMPT_NAME=dad-it-support-agent`
-   - `LANGFUSE_PROMPT_LABEL=production`
-   - `WORKSHOP_PROMPT_VARIANT=baseline`
-   - `DATASET_NAME=dad-it-support-workshop`
+## Step 2 — Configure `.env`
 
-## Commands to run
+```bash
+cp .env.example .env
+```
+
+Fill in:
+
+```bash
+OPENAI_API_KEY=sk-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+Leave the rest of the defaults as they are.
+
+## Step 3 — Install and run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://127.0.0.1:3333`.
+Open [http://127.0.0.1:3333](http://127.0.0.1:3333).
 
-## What the finished setup should give you
+## Step 4 — Confirm what you see
 
-- The client starts on port `3333`.
-- The server starts on port `8787`.
-- The app loads the Dad support context from the server.
-- If you do not add Langfuse keys yet, the app can still boot and use its local prompt later.
+You should see the **Dad IT Support Agent** chat:
+
+- the Specs mascot up top
+- a greeting from Specs
+- suggestion chips below the greeting
+- the iPhone panel on the right ("Dad" + iPhone 11 details)
+
+![Specs greeting on the running app](../images/specs_illustration.png)
+
+> 📷 *Screenshot placeholder: the running app at `http://127.0.0.1:3333`.*
 
 ## How to verify you are done
 
-- `npm install` finishes successfully.
-- `npm run dev` starts both client and server.
-- The browser shows the workshop app instead of an error page.
+- `npm run dev` is running and listening on `http://127.0.0.1:3333` (client) and `http://127.0.0.1:8787` (server).
+- The browser shows the Specs greeting, not an error.
+- Sending one of the suggestion chips returns a real iPhone answer from the model.
 
 ## End state
 
-You are ready to start from `checkpoint/01-base-app`.
+You are ready to start `02-tracing`.

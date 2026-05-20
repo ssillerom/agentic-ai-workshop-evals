@@ -2,57 +2,49 @@
 
 ## How to think about this step
 
-This step is about making the rest of the workshop frictionless. We are not teaching Langfuse features yet. We are removing setup surprises so the workshop time can go into tracing, monitoring, and experiments.
-
-## Goal
-
-Make sure participants can:
-
-- run the app locally
-- call the OpenAI API
-- connect to Langfuse Cloud EU
-- use the Langfuse CLI and Langfuse skill later in the workshop
+This is the only setup step in the workshop. The base app is already in the repo and ready to run — we just need credentials and a running server. From here you go straight into tracing.
 
 ## What to prepare
 
-- An OpenAI API key
-- A Langfuse project on the EU cloud region
-- Langfuse public and secret keys
-- Node.js and npm
+1. **An OpenAI API key.** Get one from [platform.openai.com](https://platform.openai.com) → API Keys.
+2. **A Langfuse project on Cloud EU.** Sign up at [langfuse.com](https://langfuse.com), create a project, and copy the public + secret API keys from **Settings → API Keys**. Use the EU region.
 
-## Environment variables
+## Configure environment variables
 
-Use `.env.example` as the template:
+Copy the example file and fill it in:
 
 ```bash
-OPENAI_API_KEY=...
-OPENAI_MODEL=gpt-4.1-mini
+cp .env.example .env
+```
 
+Set at minimum:
+
+```bash
+OPENAI_API_KEY=sk-...
 LANGFUSE_PUBLIC_KEY=pk-lf-...
 LANGFUSE_SECRET_KEY=sk-lf-...
 LANGFUSE_BASE_URL=https://cloud.langfuse.com
-LANGFUSE_PROMPT_NAME=dad-it-support-agent
-LANGFUSE_PROMPT_LABEL=production
-
-WORKSHOP_PROMPT_VARIANT=baseline
-DATASET_NAME=dad-it-support-workshop
 ```
 
-## Commands
+The remaining defaults (`OPENAI_MODEL`, `LANGFUSE_PROMPT_NAME`, `LANGFUSE_PROMPT_LABEL`, `WORKSHOP_PROMPT_VARIANT`, `DATASET_NAME`) work as-is for the workshop.
+
+## Install and run
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open [http://127.0.0.1:3333](http://127.0.0.1:3333).
+Open [http://127.0.0.1:3333](http://127.0.0.1:3333). You should land in the **Dad IT Support Agent** chat with the Specs mascot, suggestion chips, and the phone panel on the right.
 
-## Langfuse-specific prep
+![Specs greeting on the running app](./images/specs_illustration.png)
 
-- Ask participants to install the Langfuse CLI.
-- Ask participants to install the Langfuse skill if that is part of the workshop environment.
-- Point out that Langfuse credentials are optional for the earliest app step but required for tracing, prompts, datasets, and experiments.
+> 📷 *Screenshot placeholder: the running app at `http://127.0.0.1:3333` — Specs greeting + suggestion chips + iPhone panel on the right.*
 
 ## Teaching note
 
-Call out that the workshop starts with a working OpenAI app first. Langfuse is added deliberately in later steps so participants can feel what each layer changes.
+Langfuse credentials are not required for the app to boot — the local-prompt fallback handles a missing Langfuse setup. But every later step depends on them being present, so wire them up now.
+
+## End state
+
+You have the workshop app running locally. Move straight on to `02-tracing`.

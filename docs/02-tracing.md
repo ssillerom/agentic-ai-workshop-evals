@@ -65,6 +65,10 @@ Without this swap, the wrapped `openai` is a dead variable and no traces are emi
 
 Run `npm run dev`, ask one question in the UI, open Langfuse, and you should see one generation per OpenAI call with the prompt, response, model, tokens, and latency. That's already a real telemetry surface — but every generation shows up as its own top-level trace, and we have no view of "one chat turn" yet.
 
+<!-- TODO: screenshot of the Langfuse traces list after Step 1 — multiple top-level OpenAI generation traces, no agent grouping yet. -->
+
+> 📷 *Screenshot placeholder: the Langfuse Traces view after Step 1 — each chat turn appears as one or more standalone `openai-chat-completion` generations.*
+
 ## Step 2 — Nested traces
 
 To set those generations into context we now want to group and nest them together. A single chat turn often involves more than one OpenAI call (the model decides to use a tool, we run the tool, we call OpenAI again with the tool result, and so on). Without grouping, those calls fly past in Langfuse as separate, disconnected traces. With grouping, one chat turn is one trace, and the OpenAI calls live underneath as children.
@@ -103,6 +107,10 @@ export const runSupportConversation = observe(runSupportConversationInner, {
 `index.ts` still imports `runSupportConversation` the same way — it just happens to be a `const` now. `observe(...)` auto-captures the function argument as the trace input and the return value as the trace output.
 
 Refresh Langfuse and you should now see one root `dad-it-support-chat-turn` observation per turn, with the OpenAI generation nested underneath it.
+
+<!-- TODO: screenshot of the Langfuse trace tree after Step 2 — one `dad-it-support-chat-turn` agent root with the OpenAI generation nested underneath. -->
+
+> 📷 *Screenshot placeholder: the trace tree after Step 2 — one `dad-it-support-chat-turn` (type `agent`) root, with the OpenAI generation as a child.*
 
 ## Step 3 — Recording tool calls
 
@@ -166,6 +174,10 @@ export async function executeTool(name: string, input: Record<string, unknown>):
 ```
 
 `TOOL_DEFINITIONS` at the top of the file stays untouched.
+
+<!-- TODO: screenshot of the full Langfuse trace after Step 3 — agent root, OpenAI generation, and the two tool observations all nested. -->
+
+> 📷 *Screenshot placeholder: the full trace after Step 3 — `dad-it-support-chat-turn` (agent) with the OpenAI generation **and** the `get_support_context` + `search_help_library` tool observations as siblings underneath.*
 
 ## Run and verify
 
