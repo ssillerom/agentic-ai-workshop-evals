@@ -75,11 +75,15 @@ For this workshop we use the programmatic path because we already have a curated
 npm run dataset:seed
 ```
 
-Open Langfuse → **Datasets** → `dad-it-support-workshop`. You should see the items as rows with input, expected output, and metadata. If the dataset already exists, the script upserts.
+Open Langfuse → **Datasets**. The list view should show the new `dad-it-support-workshop` dataset with 14 items and 0 experiment runs:
 
-<!-- TODO: screenshot of the seeded dataset in the Langfuse UI — rows of items with input/expected output/metadata visible. -->
+![Datasets list view in Langfuse — dad-it-support-workshop with 14 items and no runs yet.](./images/datasets/05-dataset-list.png)
 
-> 📷 *Screenshot placeholder: the `dad-it-support-workshop` dataset in Langfuse — every seeded item visible as a row with input, expected output, and metadata columns.*
+Click into the dataset and switch to the **Items** tab. Every seeded item shows up with input, expected output, and metadata columns:
+
+![Items view of the dad-it-support-workshop dataset — all 14 rows with messages input, ideal answer + expected keywords, and category/difficulty metadata.](./images/datasets/05-dataset-items.png)
+
+If the dataset already exists, the script upserts.
 
 ## What the starter dataset covers
 
