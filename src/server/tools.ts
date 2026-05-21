@@ -40,7 +40,6 @@ export const TOOL_DEFINITIONS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
 const getSupportContextTool = observe(
   async () => {
     const context = getSupportContext();
-
     return {
       ok: true,
       context: {
@@ -54,16 +53,12 @@ const getSupportContextTool = observe(
       }
     };
   },
-  {
-    name: "get_support_context",
-    asType: "tool"
-  }
+  { name: "get_support_context", asType: "tool" }
 );
 
 const searchHelpLibraryTool = observe(
   async (input: { question: string }) => {
     const guides = searchGuides(input.question);
-
     return {
       ok: true,
       results: guides.map((guide) => ({
@@ -75,26 +70,16 @@ const searchHelpLibraryTool = observe(
       }))
     };
   },
-  {
-    name: "search_help_library",
-    asType: "tool"
-  }
+  { name: "search_help_library", asType: "tool" }
 );
 
 export async function executeTool(name: string, input: Record<string, unknown>): Promise<ToolResult> {
   switch (name) {
     case "get_support_context":
       return getSupportContextTool();
-
     case "search_help_library":
-      return searchHelpLibraryTool({
-        question: String(input.question ?? "")
-      });
-
+      return searchHelpLibraryTool({ question: String(input.question ?? "") });
     default:
-      return {
-        ok: false,
-        error: `Unsupported tool: ${name}`
-      };
+      return { ok: false, error: `Unsupported tool: ${name}` };
   }
 }
