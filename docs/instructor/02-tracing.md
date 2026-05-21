@@ -45,27 +45,19 @@ new NodeSDK({ spanProcessors: [new LangfuseSpanProcessor()] }).start();
 
 The processor reads `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL` from the environment.
 
-**Wrap the OpenAI client.** In `src/server/support-agent.ts`, add the import and define a wrapped client at module scope:
+**Wrap the OpenAI client inline.** In `src/server/support-agent.ts`, add the import:
 
 ```ts
 import { observeOpenAI } from "@langfuse/openai";
+```
 
+Then wrap the OpenAI client right where it's created in `runSupportConversation`. The diff is one line — `new OpenAI(...)` → `observeOpenAI(new OpenAI(...))`:
+
+```ts
 const openai = observeOpenAI(new OpenAI({ apiKey: env.openaiApiKey }));
 ```
 
-**Then actually use it.** Find this line in `runSupportConversation`:
-
-```ts
-const response = await getOpenAIClient().chat.completions.create({
-```
-
-and replace it with:
-
-```ts
-const response = await openai.chat.completions.create({
-```
-
-Without this swap, the wrapped `openai` is a dead variable and no traces are emitted. The old `getOpenAIClient()` helper becomes unused and can be deleted.
+No factory, no separate raw client. The same `openai.chat.completions.create(...)` calls now emit traces. Keeping the wrap inline means the next step (prompt management) only has to add a second argument to this same call — the client itself doesn't have to change again.
 
 Run `npm run dev`, ask one question in the UI, open Langfuse, and you should see one generation per OpenAI call with the prompt, response, model, tokens, and latency. That's already a real telemetry surface — but every generation shows up as its own top-level trace, and we have no view of "one chat turn" yet.
 

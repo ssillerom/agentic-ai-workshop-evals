@@ -48,27 +48,25 @@ The processor reads `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_
 
 ### `src/server/support-agent.ts`
 
-Wrap the OpenAI client at module scope:
+Add the import:
 
 ```ts
 import { observeOpenAI } from "@langfuse/openai";
-
-const openai = observeOpenAI(new OpenAI({ apiKey: env.openaiApiKey }));
 ```
 
-**Then replace the call** in `runSupportConversation` — find:
+Then **wrap the OpenAI client where you create it**. Find this line in `runSupportConversation`:
 
 ```ts
-const response = await getOpenAIClient().chat.completions.create({
+const openai = new OpenAI({ apiKey: env.openaiApiKey });
 ```
 
 and change it to:
 
 ```ts
-const response = await openai.chat.completions.create({
+const openai = observeOpenAI(new OpenAI({ apiKey: env.openaiApiKey }));
 ```
 
-The old `getOpenAIClient()` helper becomes unused and can be deleted.
+That's the entire diff. No factory function, no separate raw client — `observeOpenAI` wraps the OpenAI client inline at the call site, and `openai.chat.completions.create(...)` below it now emits a trace for every call.
 
 
 **Verify:** `npm run dev`, ask one question, refresh Langfuse — you should see one generation per OpenAI call with prompt, response, tokens, and latency. Each generation is still its own top-level trace; we fix that next.

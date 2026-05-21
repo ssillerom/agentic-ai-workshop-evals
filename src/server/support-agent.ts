@@ -43,18 +43,6 @@ async function getPrompt() {
   });
 }
 
-// One-call OpenAI client factory: returns a Langfuse-observed client.
-// Options forward straight to observeOpenAI (per-generation name, tags,
-// langfusePrompt, etc.) so the call sites stay minimal between steps.
-type ObserveOpenAIOptions = Parameters<typeof observeOpenAI>[1];
-
-function getOpenAIClient(options?: ObserveOpenAIOptions) {
-  if (!env.openaiApiKey) {
-    throw new Error("OPENAI_API_KEY is missing.");
-  }
-  return observeOpenAI(new OpenAI({ apiKey: env.openaiApiKey }), options);
-}
-
 function toOpenAIMessages(
   messages: ChatMessage[]
 ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
@@ -94,25 +82,13 @@ async function runSupportConversationInner(request: ChatRequest): Promise<ChatRe
       userId,
       sessionId: request.sessionId,
       traceName: "dad-it-support-chat-turn",
-      tags: ["langfuse-workshop", "dad-it-support"],
-      version: "0.2.0",
-      metadata: {
-        contextId: context.id,
-        contextLabel: context.label
-      }
+      tags: ["langfuse-workshop", "dad-it-support"]
     },
     async () => {
-      const openai = getOpenAIClient({
-        generationName: "openai-chat-completion",
-        userId,
-        sessionId: request.sessionId,
-        tags: ["langfuse-workshop", "dad-it-support"],
-        generationMetadata: {
-          contextId: context.id,
-          contextLabel: context.label
-        },
-        ...(langfusePrompt ? { langfusePrompt: langfusePrompt as never } : {})
-      });
+      const openai = observeOpenAI(
+        new OpenAI({ apiKey: env.openaiApiKey }),
+        langfusePrompt ? { langfusePrompt: langfusePrompt as never } : undefined
+      );
 
       const transcript: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         { role: "system", content: systemPrompt },

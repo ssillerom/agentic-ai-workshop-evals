@@ -67,14 +67,15 @@ async function getPrompt() {
   });
 }
 
-// inside runSupportConversationInner:
+// inside runSupportConversationInner — fetch + compile:
 const langfusePrompt = await getPrompt();
 const systemPrompt = langfusePrompt ? langfusePrompt.compile() : SYSTEM_PROMPT;
 
-const openai = getOpenAIClient({
-  generationName: "openai-chat-completion",
-  ...(langfusePrompt ? { langfusePrompt } : {})
-});
+// the same observeOpenAI call from step 02, with one extra argument:
+const openai = observeOpenAI(
+  new OpenAI({ apiKey: env.openaiApiKey }),
+  langfusePrompt ? { langfusePrompt } : undefined
+);
 
 const transcript = [
   { role: "system", content: systemPrompt },
@@ -84,8 +85,8 @@ const transcript = [
 
 Three things to notice:
 
+- The `observeOpenAI(...)` call itself didn't change — same client, same inline wrap as step 02. We just added a second argument carrying the `langfusePrompt`. Keeping the client inline (no factory) is what makes this diff so small.
 - `langfuse.prompt.get(name, { fallback })` — the `fallback` option means the call always resolves: if Langfuse is unreachable or the prompt is missing, the returned object's compiled body is the local `SYSTEM_PROMPT`. No throws, no degradation in user experience.
-- `langfusePrompt.compile()` returns the system prompt as a string for our text prompt. (For chat prompts it returns a `messages` array.)
 - Passing `langfusePrompt` into `observeOpenAI`'s options is what makes every generation carry the **Prompt** badge linking back to the exact published version. The [Langfuse OpenAI JS integration docs](https://langfuse.com/integrations/model-providers/openai-js) show the canonical pattern.
 
 ## Run and verify

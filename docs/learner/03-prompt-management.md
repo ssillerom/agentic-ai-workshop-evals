@@ -92,17 +92,25 @@ async function getPrompt() {
 }
 ```
 
-**Use it inside `runSupportConversationInner`** — fetch the prompt, compile to a string, and forward the prompt object to `observeOpenAI` so the generation row in Langfuse gets a Prompt badge linking back to the exact version:
+**Use it at the top of `runSupportConversation`** — fetch the prompt and compile to a string:
 
 ```ts
 const langfusePrompt = await getPrompt();
 const systemPrompt = langfusePrompt ? langfusePrompt.compile() : SYSTEM_PROMPT;
+```
 
-const openai = getOpenAIClient({
-  generationName: "openai-chat-completion",
-  ...(langfusePrompt ? { langfusePrompt } : {})
-});
+**Add `langfusePrompt` to the existing `observeOpenAI` call** — same client wrap from step 02, just with a second argument so the generation gets linked to the prompt version:
 
+```ts
+const openai = observeOpenAI(
+  new OpenAI({ apiKey: env.openaiApiKey }),
+  langfusePrompt ? { langfusePrompt } : undefined
+);
+```
+
+And use `systemPrompt` (instead of `SYSTEM_PROMPT`) in the messages array:
+
+```ts
 const transcript = [
   { role: "system", content: systemPrompt },
   ...toOpenAIMessages(request.messages)
@@ -111,9 +119,9 @@ const transcript = [
 
 Three things to notice:
 
+- The `observeOpenAI(new OpenAI(...))` call itself didn't change — same client, same inline wrap. We just added a second argument carrying the `langfusePrompt`. That's the smallest possible diff between this step and the previous one.
 - `langfuse.prompt.get(name, { fallback })` returns a prompt object even when Langfuse is unreachable — `fallback` kicks in silently, and the app keeps working.
 - `langfusePrompt.compile()` returns the prompt body as a string. (For chat prompts it would return a `messages` array; we use a text prompt.)
-- Passing `langfusePrompt` into `observeOpenAI` is what makes every generation under that client carry the **Prompt** badge linking back to the exact published version.
 
 ## Verify
 
