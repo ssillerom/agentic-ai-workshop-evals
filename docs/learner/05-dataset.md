@@ -104,7 +104,7 @@ If you add items later, prefer ones that match a real signal you saw in monitori
 
 ## Wrap-up
 
-Datasets are how you write down what your system is expected to handle. A good one gives you confidence to ship and to iterate without regressing. You can seed datasets via the Langfuse CLI or skill, build them from production traces in the UI, or maintain them in code like we did — the right approach depends on where your best examples come from.
+Datasets are how you write down what your system is expected to handle. A good one gives you confidence to ship and to iterate without regressing. You can seed datasets via the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli) or skill, build them from production traces in the UI, or maintain them in code like we did — the right approach depends on where your best examples come from.
 
 Next we use this dataset to run experiments against the agent.
 

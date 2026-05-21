@@ -28,7 +28,7 @@ The recommended repo strategy is:
 Each checkpoint is the finished output of the previous module and the starting point of the next one.
 
 - `00-setup`
-  Setup, keys, Langfuse Cloud EU, Langfuse CLI, [Langfuse skill](https://github.com/langfuse/skills), and workshop framing.
+  Setup, keys, Langfuse Cloud EU, [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli), [Langfuse skill](https://github.com/langfuse/skills), and workshop framing.
 
 - `01-base-app`
   A working Dad IT Support Agent on the official OpenAI SDK, with one fixed Dad context, two local tools, and no Langfuse tracing yet.

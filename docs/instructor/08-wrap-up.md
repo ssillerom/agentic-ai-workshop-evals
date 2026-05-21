@@ -36,7 +36,7 @@ The point of Langfuse in this workshop is not just observability. It's giving te
 
 When participants go back to their own codebase, the recommended path is:
 
-1. **Install the Langfuse CLI** so prompts, datasets, and runs can be managed from the terminal:
+1. **Install the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)** so prompts, datasets, and runs can be managed from the terminal:
 
    ```bash
    npm install -g @langfuse/cli

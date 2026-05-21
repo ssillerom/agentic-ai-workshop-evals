@@ -39,7 +39,7 @@ Langfuse in this workshop is a *shared surface*, not just observability:
 
 When you go back to your own codebase, do this in order:
 
-1. **Install the Langfuse CLI** so you can manage prompts, datasets, and runs from the terminal:
+1. **Install the [Langfuse CLI](https://langfuse.com/docs/api-and-data-platform/features/cli)** so you can manage prompts, datasets, and runs from the terminal:
 
    ```bash
    npm install -g @langfuse/cli
