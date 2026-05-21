@@ -1,18 +1,12 @@
 import "dotenv/config";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { LangfuseSpanProcessor } from "@langfuse/otel";
 import express from "express";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import type { ChatRequest } from "../shared/types";
 import { runSupportConversation } from "./support-agent";
-import { env, isLangfuseConfigured } from "./env";
+import { env } from "./env";
 import { DEFAULT_SUPPORT_CONTEXT } from "./support-data";
-
-const langfuseSpanProcessor = new LangfuseSpanProcessor();
-const sdk = new NodeSDK({ spanProcessors: [langfuseSpanProcessor] });
-sdk.start();
 
 const requestSchema = z.object({
   sessionId: z.string().min(1),
@@ -36,7 +30,7 @@ app.get("/api/health", (_request, response) => {
   response.json({
     ok: true,
     provider: "openai",
-    tracingConfigured: isLangfuseConfigured()
+    tracingConfigured: false
   });
 });
 
@@ -69,8 +63,6 @@ const server = app.listen(env.port, "127.0.0.1", () => {
 
 async function shutdown() {
   server.close();
-  await langfuseSpanProcessor.forceFlush();
-  await sdk.shutdown();
 }
 
 process.on("SIGINT", () => void shutdown());
