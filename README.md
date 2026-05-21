@@ -54,6 +54,6 @@ Instructor notes for the same modules live in [`docs/instructor/`](./docs/instru
 
 - Walk the modules in order starting from [`docs/learner/00-setup.md`](./docs/learner/00-setup.md), **or**
 - Jump to whichever chapter matches what you want to learn, **or**
-- Install the [**Langfuse skill**](https://langfuse.com/docs) (`/langfuse`) to apply the patterns from this workshop to your own codebase.
+- Install the [**Langfuse skill**](https://github.com/langfuse/skills) (`/langfuse`) to apply the patterns from this workshop to your own codebase.
 
 For the bigger-picture material on each chapter, the [Langfuse Academy](https://langfuse.com/academy) has a dedicated lesson per module.

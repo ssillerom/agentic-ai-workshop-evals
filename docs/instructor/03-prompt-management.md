@@ -100,4 +100,4 @@ Ask a question, then in Langfuse:
 
 Tracing without prompt management is a one-way street: you can see what the model did but you can't tell which prompt change caused which behavior. Prompt management closes the loop. Now every change in the Langfuse UI is a new version, every trace points at its version, and the eval and monitoring steps can compare versions head-to-head.
 
-A more straightforward way to wire prompt management in line with Langfuse best practices is the [**Langfuse skill**](https://langfuse.com/docs) (`/langfuse`). It applies the recommended patterns automatically. The hand-rolled walkthrough in this step exists so you understand what the skill is doing under the hood.
+A more straightforward way to wire prompt management in line with Langfuse best practices is the [**Langfuse skill**](https://github.com/langfuse/skills) (`/langfuse`). It applies the recommended patterns automatically. The hand-rolled walkthrough in this step exists so you understand what the skill is doing under the hood.
