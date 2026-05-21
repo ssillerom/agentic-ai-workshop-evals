@@ -1,14 +1,16 @@
 # Langfuse Workshop — the AI engineering loop, end to end
 
-## What is this?
+## Introduction
 
-A **step-by-step Langfuse workshop** built on a small sample application — the *Dad IT Support Agent*. Working through it takes you through every Langfuse module along the **AI engineering loop**: tracing, prompt management, monitoring, datasets, experiments, and evaluation.
+This is a **step-by-step Langfuse workshop** built on a small sample application — the *Dad IT Support Agent*. Working through it takes you through every Langfuse module along the **AI engineering loop**: tracing, prompt management, monitoring, datasets, experiments, and evaluation.
+
+![The AI Engineering Loop](./docs/images/AI-engineering-loop.png)
 
 The sample app is a small web chat where Dad himself opens the chat to get iPhone help. The agent is named **Specs** and answers with step-by-step instructions. Under the hood it's a normal OpenAI tool-calling loop with two tools.
 
 ![The Dad IT Support Agent sample app — Specs greeting Dad, suggestion chips, and the iPhone side panel.](./docs/images/sample_app.png)
 
-## Should I do it?
+## Should I work through this?
 
 If you can answer "yes" to any of these, yes:
 
@@ -29,37 +31,8 @@ This workshop lives in a GitHub repository. The walkthrough is split into nine m
 
 Every step has a **git checkpoint** named for the lesson it kicks off. Checking out `checkpoint/03-prompt-management` puts you in the right starting state for the prompt management chapter — i.e. the code you'd have at the end of the previous chapter. That means you can start any module from scratch.
 
-## 1. Setup
 
-1. **Get an OpenAI API key** from [platform.openai.com](https://platform.openai.com).
-2. **Sign up for Langfuse Cloud EU** at [langfuse.com](https://langfuse.com), create a project, and copy the public + secret API keys from **Settings → API Keys**.
-3. **Configure `.env`:**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Fill in:
-
-   ```bash
-   OPENAI_API_KEY=sk-...
-   LANGFUSE_PUBLIC_KEY=pk-lf-...
-   LANGFUSE_SECRET_KEY=sk-lf-...
-   LANGFUSE_BASE_URL=https://cloud.langfuse.com
-   ```
-
-4. **Install and run:**
-
-   ```bash
-   npm install
-   npm run dev
-   ```
-
-5. **Open [http://127.0.0.1:3333](http://127.0.0.1:3333)** — you should land in the Specs chat.
-
-For the long-form setup walkthrough, see [`docs/learner/00-setup.md`](./docs/learner/00-setup.md).
-
-## 2. Modules
+## Modules
 
 | Step | Branch (`git checkout …`) | What you'll learn |
 | --- | --- | --- |
@@ -76,22 +49,6 @@ For the long-form setup walkthrough, see [`docs/learner/00-setup.md`](./docs/lea
 Each `checkpoint/0X-…` tag is the **starting state of that lesson** — the code you'd have if you'd finished every previous module. See [`docs/checkpoints.md`](./docs/checkpoints.md) for the convention.
 
 Instructor notes for the same modules live in [`docs/instructor/`](./docs/instructor/).
-
-## Architecture at a glance
-
-- `React + Vite` — chat UI in `src/client/`
-- `Express + TypeScript` — model calls, tool execution, traces, and experiment runs in `src/server/`
-- `OpenAI` — the model provider from the very first runnable app
-- `Langfuse Cloud EU` — observability + prompt + dataset + experiment target
-
-Repo layout:
-
-- `src/client/` — the web chat UI (Specs mascot, suggestion chips, phone panel)
-- `src/server/` — the agent (`support-agent.ts` holds the prompt, tool loop, OpenAI client factory), tools, and tracing
-- `scripts/` — prompt publishing, dataset seeding, and experiment runs
-- `data/seed-dataset.json` — the starter workshop dataset
-- `docs/learner/` — step-by-step participant guide
-- `docs/instructor/` — facilitator notes for the same modules
 
 ## Where to go next
 
