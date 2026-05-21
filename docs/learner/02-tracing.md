@@ -20,7 +20,7 @@ When Dad asks "How do I turn Bluetooth on?", the agent doesn't just hit OpenAI o
 
 The goal of this chapter is to make every one of those steps visible in Langfuse — one chat turn becomes one nested trace with the agent run, the OpenAI generations, and the two tool calls all logged in order.
 
-![Spec's step by step process](../tracing/process_illustration.png)
+![Spec's step by step process](../images/tracing/process_illustration.png)
 
 We will build up the trace in three steps that mirror the agent's structure:
 
