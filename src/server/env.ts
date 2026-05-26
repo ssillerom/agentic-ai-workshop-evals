@@ -7,6 +7,7 @@ export const env = {
   langfuseBaseUrl: process.env.LANGFUSE_BASE_URL ?? "https://cloud.langfuse.com",
   langfusePromptName: process.env.LANGFUSE_PROMPT_NAME ?? "dad-it-support-agent",
   langfusePromptLabel: process.env.LANGFUSE_PROMPT_LABEL ?? "production",
+  workshopPromptVariant: process.env.WORKSHOP_PROMPT_VARIANT ?? "default",
   datasetName: process.env.DATASET_NAME ?? "dad-it-support-workshop"
 };
 
