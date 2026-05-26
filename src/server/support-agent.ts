@@ -62,7 +62,6 @@ export async function runSupportConversation(request: ChatRequest): Promise<Chat
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const response = await openai.chat.completions.create({
       model: env.openaiModel,
-      temperature: 0.2,
       messages: transcript,
       tools: TOOL_DEFINITIONS,
       tool_choice: "auto"
