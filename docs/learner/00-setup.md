@@ -43,7 +43,7 @@ LANGFUSE_BASE_URL=https://cloud.langfuse.com
 
 Leave the rest of the defaults as they are.
 
-The workshop app always loads this repository's `.env` file for the server and helper scripts. If you have `LANGFUSE_*`, `OPENAI_*`, or `DATASET_NAME` values exported in your shell from another project, they will not override this file. To change the workshop configuration, edit `.env`.
+The workshop app always loads this repository's `.env` file for the Python server and helper scripts. If you have `LANGFUSE_*`, `OPENAI_*`, or `DATASET_NAME` values exported in your shell from another project, they will not override this file. To change the workshop configuration, edit `.env`.
 
 Keep these values in your local `.env` only. Do not paste real API keys into shared workshop notes, transcripts, screenshots, or chat messages.
 
@@ -53,6 +53,8 @@ Keep these values in your local `.env` only. Do not paste real API keys into sha
 npm install
 npm run dev
 ```
+
+`npm run dev` starts the Vite client and the Python FastAPI server. The Python dependencies are resolved by `uv` from `pyproject.toml`.
 
 Open [http://127.0.0.1:3333](http://127.0.0.1:3333).
 

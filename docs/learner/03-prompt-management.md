@@ -11,7 +11,7 @@ description: "Move the system prompt into Langfuse, fetch the production prompt 
 git checkout checkpoint/03-prompt-management
 ```
 
-You have a working traced app. The system prompt lives as a constant called `SYSTEM_PROMPT` in `src/server/support-agent.ts` and is used directly as the system message.
+You have a working traced app. The system prompt lives as a constant called `SYSTEM_PROMPT` in `backend/agent.py` and is used directly as the system message.
 
 In this chapter we move that prompt into Langfuse so it's versioned and editable in the UI, and we fetch it back at request time. The local constant stays in the file as a fallback for when Langfuse isn't reachable.
 
@@ -42,58 +42,68 @@ The most direct way to create a prompt is to add it manually in the UI — it's 
 1. In Langfuse, open **Prompts → New prompt**.
 2. **Name** it `dad-it-support-agent` (matching `LANGFUSE_PROMPT_NAME` in your `.env`).
 3. **Type** is `text`.
-4. **Paste** the body of `SYSTEM_PROMPT` from `src/server/support-agent.ts`.
+4. **Paste** the body of `SYSTEM_PROMPT` from `backend/agent.py`.
 5. **Label** the version `production` (matching `LANGFUSE_PROMPT_LABEL` in your `.env`).
 6. **Save**.
 
 ![Creating the dad-it-support-agent prompt in Langfuse.](../images/prompt-management/03-prompt-management-new-prompt-form.png)
 
-> 💡 *Alternative — publish via script.* `scripts/publish-prompt.ts` pushes the `SYSTEM_PROMPT` constant up to Langfuse (`npm run prompt:publish`). Same outcome.
+> 💡 *Alternative — publish via script.* `scripts/publish_prompt.py` pushes the `SYSTEM_PROMPT` constant up to Langfuse (`npm run prompt:publish`). Same outcome.
 
 ## Step 2 — Fetch the prompt from Langfuse
 
-**Add the import** in `src/server/support-agent.ts`:
+**Add the import** in `backend/agent.py`:
 
-```ts
-import { LangfuseClient } from "@langfuse/client";
+```py
+from langfuse import get_client
 ```
 
 **Construct the client at module scope:**
 
-```ts
-const langfuse = new LangfuseClient();
+```py
+langfuse = get_client()
 ```
 
-**Add a `getPrompt` helper** that fetches from Langfuse, returning `null` on any failure so the chat can fall back to the local `SYSTEM_PROMPT`:
+**Add a `get_prompt` helper** that fetches from Langfuse, returning `None` on any failure so the chat can fall back to the local `SYSTEM_PROMPT`:
 
-```ts
-async function getPrompt() {
-  try { return await langfuse.prompt.get(env.langfusePromptName); }
-  catch { return null; }
+```py
+def get_prompt():
+    try:
+        return langfuse.get_prompt(
+            settings.langfuse_prompt_name,
+            label=settings.langfuse_prompt_label,
+        )
+    except Exception:
+        return None
+```
+
+**Use it in `run_support_conversation`** — fetch, then fall back to the local constant if the fetch returned null:
+
+```py
+langfuse_prompt = get_prompt()
+system_prompt = langfuse_prompt.compile() if langfuse_prompt else SYSTEM_PROMPT
+```
+
+**Pass `langfuse_prompt` into the OpenAI call** so the generation gets linked to the published prompt version — only when we actually have one:
+
+```py
+completion_kwargs = {
+    "model": settings.openai_model,
+    "messages": transcript,
+    "tools": TOOL_DEFINITIONS,
+    "tool_choice": "auto",
 }
-```
+if langfuse_prompt is not None:
+    completion_kwargs["langfuse_prompt"] = langfuse_prompt
 
-**Use it in `runSupportConversation`** — fetch, then fall back to the local constant if the fetch returned null:
-
-```ts
-const langfusePrompt = await getPrompt();
-const systemPrompt = langfusePrompt?.prompt ?? SYSTEM_PROMPT;
-```
-
-**Pass `langfusePrompt` to the existing `observeOpenAI` call** so the generation gets linked to the published prompt version — only when we actually have one:
-
-```ts
-const openai = observeOpenAI(
-  new OpenAI({ apiKey: env.openaiApiKey }),
-  langfusePrompt ? { langfusePrompt } : undefined
-);
+response = client.chat.completions.create(**completion_kwargs)
 ```
 
 Three things to notice:
 
-- The `observeOpenAI(new OpenAI(...))` call itself didn't change — same inline wrap from step 02. We just added a conditional second argument carrying the `langfusePrompt`.
+- The OpenAI client itself stays the Langfuse-wrapped Python client from step 02. We just add a conditional `langfuse_prompt` argument to the generation call.
 - The local `SYSTEM_PROMPT` constant stays in the file as the fallback. If Langfuse is misconfigured or the prompt isn't published yet, the chat keeps working — it just won't carry the Prompt badge on that turn.
-- Passing `langfusePrompt` into `observeOpenAI` is what makes every generation under that client carry the **Prompt** badge linking back to the exact published version.
+- Passing `langfuse_prompt` into `chat.completions.create(...)` is what makes the generation carry the **Prompt** badge linking back to the exact published version.
 
 ## Verify
 

@@ -1,6 +1,6 @@
 ---
 title: "Workshop: Instructor Notes for the Base App Tour"
-description: "Facilitator notes for the base app chapter, including what to point out in the chat UI, Express route, agent loop, and local tools."
+description: "Facilitator notes for the base app chapter, including what to point out in the chat UI, FastAPI route, agent loop, and local tools."
 ---
 
 # 01 Base App
@@ -10,7 +10,7 @@ Learner guide: [01 Base App](../learner/01-base-app.md)
 ## Instructor notes
 
 - This is a quick orientation chapter. There is intentionally nothing to build.
-- Point at the three boundaries learners will instrument later: Express route, agent loop, local tools.
+- Point at the three boundaries learners will instrument later: FastAPI route, agent loop, local tools.
 - Stress that the base checkpoint uses the official OpenAI SDK and local tool functions only.
 
 ## Watch for

@@ -11,7 +11,7 @@ description: "Seed a starter dataset for the support agent with realistic inputs
 git checkout checkpoint/05-dataset
 ```
 
-You have a traced, attributed, monitored app. `data/seed-dataset.json` and `scripts/seed-dataset.ts` are already in the repo at this checkpoint.
+You have a traced, attributed, monitored app. `data/seed-dataset.json` and `scripts/seed_dataset.py` are already in the repo at this checkpoint.
 
 Make sure `.env` has:
 
@@ -64,7 +64,7 @@ The two fields inside `expectedOutput` answer two different evaluator questions:
 
 `metadata` lets us slice runs by category or difficulty later when comparing experiment runs side by side.
 
-If you look at the actual JSON in `data/seed-dataset.json`, the `input` is the full `{ messages: [...] }` shape that `/api/chat` accepts, plus an `id` field for the dataset row. We've simplified the example above to show *what an item is*; the on-disk format is what the experiment script (step 06) can feed straight into `runSupportConversation(...)` without rewriting inputs.
+If you look at the actual JSON in `data/seed-dataset.json`, the `input` is the full `{ messages: [...] }` shape that `/api/chat` accepts, plus an `id` field for the dataset row. We've simplified the example above to show *what an item is*; the on-disk format is what the experiment script (step 06) can feed straight into `run_support_conversation(...)` without rewriting inputs.
 
 ## Step 2 — Seed the dataset
 

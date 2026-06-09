@@ -16,8 +16,8 @@ Learner guide: [03 Prompt Management](../learner/03-prompt-management.md)
 ## Demo rhythm
 
 1. Create `dad-it-support-agent` as a text prompt and label it `production`.
-2. Fetch it with `LangfuseClient`.
-3. Pass `langfusePrompt` into `observeOpenAI`.
+2. Fetch it with `get_client().get_prompt(...)`.
+3. Pass `langfuse_prompt` into `chat.completions.create(...)`.
 4. Open a generation and show the Prompt badge.
 
 ## Watch for

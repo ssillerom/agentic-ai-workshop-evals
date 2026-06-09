@@ -11,7 +11,7 @@ description: "Run the support agent across the Langfuse dataset, attach keyword 
 git checkout checkpoint/06-experiments
 ```
 
-Your dataset is seeded in Langfuse. `scripts/run-dataset.ts` is already in the repo.
+Your dataset is seeded in Langfuse. `scripts/run_dataset.py` is already in the repo.
 
 ## Why experiments
 
@@ -19,7 +19,7 @@ A trace tells you about *one* turn. An experiment tells you about behavior *acro
 
 
 1. **Pulls each item from the dataset.**
-2. **Runs the item's input through the agent** — same `runSupportConversation(...)` the web app uses, so the trace shape is the same as production.
+2. **Runs the item's input through the agent** — same `run_support_conversation(...)` the web app uses, so the trace shape is the same as production.
 3. **Scores the actual output against the expected output** with one or more evaluators.
 
 Different evaluators answer different questions. For a broader tour of evaluator types and when to pick which, see the [Langfuse Academy lesson on evaluate](https://langfuse.com/academy/evaluate). For this workshop we use two that give a quick first read on answer quality:
@@ -39,52 +39,34 @@ By the end of this chapter:
 
 ## Step 1 — Understand the run script
 
-Open `scripts/run-dataset.ts`. The file is annotated with numbered comments (`// --- 1. Boot the OpenTelemetry SDK ...`, `// --- 3. The deterministic evaluator ...`, etc.) so you can read it section by section. At a high level:
+Open `scripts/run_dataset.py`. At a high level, it:
 
 - Loads the hosted dataset from Langfuse by `DATASET_NAME`.
-- For each item, calls the same `runSupportConversation(...)` the web app uses.
-- Uses `dataset.runExperiment(...)` to roll all per-item traces into a single run row.
+- For each item, calls the same `run_support_conversation(...)` the web app uses.
+- Uses `dataset.run_experiment(...)` to roll all per-item traces into a single run row.
 - Attaches a `keyword_overlap` score per item by comparing `expectedKeywords` against the agent's answer.
 
 The traces produced are the same shape as production traces — same `dad-it-support-chat-turn` root, same OpenAI generation, same tool spans. We don't touch the script in this chapter.
 
-### `dataset.runExperiment(...)` — the moving parts
+### `dataset.run_experiment(...)` — the moving parts
 
-The whole run is one call to `runExperiment`. The shape boils down to:
+The whole run is one call to `run_experiment`. The shape boils down to:
 
-```ts
-await dataset.runExperiment({
-  // 1. Identity
-  name: "Dad IT Support Agent experiment",
-  runName,           // unique label for this run; shows up in the Runs tab
-  description: "...",
-  metadata: { model: env.openaiModel },
-  maxConcurrency: 1, // run items one at a time
-
-  // 2. task — runs the agent on one dataset item.
-  //    Whatever you return becomes that item's `output` and is what the
-  //    evaluators below score.
-  task: async (item) => {
-    const response = await runSupportConversation({ /* item.input */ });
-    return response.answer;
-  },
-
-  // 3. evaluators — one entry per score. Each runs after task returns
-  //    and gets { input, output, expectedOutput, metadata }. Return
-  //    { name, value, comment } to attach the score to the item's trace.
-  evaluators: [
-    async ({ output, expectedOutput }) => ({
-      name: "keyword_overlap",
-      value: keywordOverlap(output as string, (expectedOutput as any).expectedKeywords),
-      comment: "..."
-    })
-  ]
-});
+```py
+result = dataset.run_experiment(
+    name="Dad IT Support Agent experiment",
+    run_name=run_name,
+    description="...",
+    metadata={"model": settings.openai_model},
+    max_concurrency=1,
+    task=task,
+    evaluators=[keyword_overlap_evaluator],
+)
 ```
 
 Three things to understand:
 
-- **`task`** is *your application logic* — we call straight into `runSupportConversation(...)`, which means every trace this script produces looks identical to a production trace.
+- **`task`** is *your application logic* — we call straight into `run_support_conversation(...)`, which means every trace this script produces looks identical to a production trace.
 - **`evaluators`** is a list. Add more entries to attach more scores. Each evaluator is independent and runs against the same output, so combining a deterministic check like `keyword_overlap` with an LLM-as-a-judge check like the Correctness evaluator we set up below is just two list entries.
 - **`runName`** is what groups every per-item trace into one row in the Langfuse Runs view. Pick a name that changes per run (we include the timestamp) so two runs don't collide.
 
@@ -136,7 +118,7 @@ The script attaches `keyword_overlap` itself. The Correctness evaluator you set 
 
 The two scoring approaches give you two angles on the same run: **keyword match** for "did we cover the right steps?" and **correctness** for "is the answer actually right?" Real evaluation programs typically combine deterministic and judge-based checks like this.
 
-The [**Langfuse skill**](https://github.com/langfuse/skills) (`/langfuse`) knows the recommended evaluator shapes and how to wire them into `runExperiment` — this walkthrough exists so you see what the skill is doing under the hood. Learn more about experiments in the [Langfuse Academy lesson](https://langfuse.com/academy/experiments).
+The [**Langfuse skill**](https://github.com/langfuse/skills) (`/langfuse`) knows the recommended evaluator shapes and how to wire them into `run_experiment` — this walkthrough exists so you see what the skill is doing under the hood. Learn more about experiments in the [Langfuse Academy lesson](https://langfuse.com/academy/experiments).
 
 ## End state
 

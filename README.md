@@ -1,6 +1,6 @@
 # Langfuse Workshop - the AI engineering loop, end to end
 
-This is a step-by-step Langfuse workshop built on a small TypeScript sample application: the **Dad IT Support Agent**. The workshop covers the full AI engineering loop with Langfuse: tracing, prompt management, monitoring, datasets, experiments, and evaluation.
+This is a step-by-step Langfuse workshop built on a small React + Python sample application: the **Dad IT Support Agent**. The workshop covers the full AI engineering loop with Langfuse: tracing, prompt management, monitoring, datasets, experiments, and evaluation.
 
 You can complete the workshop on your own from the learner lessons, or use the instructor notes to teach the same material to a group.
 
@@ -14,7 +14,7 @@ Use the learner path if you want to:
 - Move a prompt into Langfuse so changes are versioned and linked to traces.
 - Monitor production behavior without reading every trace by hand.
 - Build a dataset, run experiments, and evaluate changes with evidence.
-- Inspect a complete TypeScript reference implementation you can copy patterns from.
+- Inspect a complete Python agent backend you can copy patterns from.
 
 No instructor is required. The learner lessons are complete enough to run the workshop in self-guided mode.
 
@@ -26,7 +26,7 @@ The workshop does not depend on an instructor. The instructor notes add teaching
 
 ## Workshop scope
 
-The sample app is a small web chat where Dad opens the chat to get iPhone help. The agent is named **Specs** and answers with step-by-step instructions. Under the hood, it is a normal OpenAI tool-calling loop with two local tools.
+The sample app is a small web chat where Dad opens the chat to get iPhone help. The agent is named **Specs** and answers with step-by-step instructions. Under the hood, it is a normal OpenAI tool-calling loop in Python with two local tools.
 
 ![The AI Engineering Loop](./docs/images/AI-engineering-loop.png)
 
@@ -54,7 +54,7 @@ The sample app is a small web chat where Dad opens the chat to get iPhone help. 
 
 `checkpoint/00-setup` and `checkpoint/01-base-app` intentionally contain the same untraced base app. Setup uses that state to validate keys, dependencies, and ports; Base App uses it for orientation. Tracing starts in `02-tracing`.
 
-The workshop server and npm helper scripts treat the repository `.env` as the Node-side source of truth. Local shell exports from other projects do not override `.env`, so change workshop keys, Langfuse host, prompt labels, and dataset names in that file.
+The Python server and helper scripts treat the repository `.env` as the source of truth. Local shell exports from other projects do not override `.env`, so change workshop keys, Langfuse host, prompt labels, and dataset names in that file.
 
 The workshop is small enough to finish in a sitting, and every module can also be used independently if you only care about one part of the loop.
 
@@ -63,8 +63,10 @@ The workshop is small enough to finish in a sitting, and every module can also b
 - [`docs/learner/`](./docs/learner/) contains the self-guided workshop lessons.
 - [`docs/instructor/`](./docs/instructor/) contains facilitator notes for teaching the same lessons.
 - [`docs/images/`](./docs/images/) contains screenshots and diagrams, grouped by lesson.
-- [`src/`](./src/) contains the sample app.
-- [`scripts/`](./scripts/) contains dataset and prompt helper scripts used in later lessons.
+- [`src/client/`](./src/client/) contains the React chat UI.
+- [`src/shared/`](./src/shared/) contains frontend TypeScript types for the HTTP contract.
+- [`backend/`](./backend/) contains the Python FastAPI server, agent loop, tools, and support data.
+- [`scripts/`](./scripts/) contains Python dataset and prompt helper scripts used in later lessons.
 
 ## Where to go next
 

@@ -64,9 +64,9 @@ Prompts → `dad-it-support-agent` → edit body → add the rule above into the
 
 ![Review Prompt Changes in Langfuse — side-by-side diff between v1 and the draft with the new out-of-scope rule highlighted, ready to save as a new version and promote to production.](../images/evaluate-a-change/07-evaluate-a-change-prompt-diff.png)
 
-**Option B — Code-side (edit `src/server/support-agent.ts` and republish):**
+**Option B — Code-side (edit `backend/agent.py` and republish):**
 
-Open `src/server/support-agent.ts`, add the same rule into the `SYSTEM_PROMPT` constant's Rules block, then publish:
+Open `backend/agent.py`, add the same rule into the `SYSTEM_PROMPT` constant's Rules block, then publish:
 
 ```bash
 npm run prompt:publish
@@ -74,7 +74,7 @@ npm run prompt:publish
 
 The repo also ships a `gentler` variant you can switch to as-is (`WORKSHOP_PROMPT_VARIANT=gentler npm run prompt:publish`) — useful if you just want to see *any* prompt change rather than design your own.
 
-Either way you end up with a new prompt version, and the next `runSupportConversation(...)` call uses it.
+Either way you end up with a new prompt version, and the next `run_support_conversation(...)` call uses it.
 
 ## Step 2 — Rerun the dataset
 

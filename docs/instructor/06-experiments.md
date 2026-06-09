@@ -9,14 +9,14 @@ Learner guide: [06 Experiments](../learner/06-experiments.md)
 
 ## Instructor notes
 
-- The key idea is reuse: the experiment runner calls the same `runSupportConversation(...)` as the web app.
+- The key idea is reuse: the experiment runner calls the same `run_support_conversation(...)` as the web app.
 - Contrast deterministic scoring (`keyword_overlap`) with LLM-as-a-judge scoring (`correctness`).
 - Confirm the default evaluator model before the Correctness setup. If learners did not configure it in session 4, send them to **Project Settings → LLM Connections** first.
 - Keep concurrency at one for workshops so traces and console output are easy to follow.
 
 ## Demo rhythm
 
-1. Skim the numbered sections in `scripts/run-dataset.ts`.
+1. Skim `scripts/run_dataset.py`.
 2. Configure the Correctness evaluator for dataset runs.
 3. Run `npm run dataset:run`.
 4. Open the run table, per-item traces, and chart view.
